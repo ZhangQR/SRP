@@ -1,6 +1,8 @@
 // Similar to regular FX/Glass/Stained BumpDistort shader
 // from standard Effects package, just without grab pass,
 // and samples a texture with a different name.
+// 计算假折射 _GrabBlurTexture 是通过后处理模糊后传过来的屏幕图
+// https://docs.unity3d.com/Manual/GraphicsCommandBuffers.html
 
 Shader "CommandBuffer/BlurryRefraction/Stained BumpDistort (no grab)" {
 Properties {

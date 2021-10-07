@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 /// <summary>
-/// 实现毛玻璃效果
+/// 实现毛玻璃效果,https://docs.unity3d.com/Manual/GraphicsCommandBuffers.html
 /// </summary>
 [ExecuteInEditMode]
 public class CommandBufferBlurRefraction : MonoBehaviour

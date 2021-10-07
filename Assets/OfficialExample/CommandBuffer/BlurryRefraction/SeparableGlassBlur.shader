@@ -1,4 +1,5 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+// 用于在物体渲染前模糊的，先模糊出一张屏幕图，然后传给另一个着色器进行假折射计算
+// https://docs.unity3d.com/Manual/GraphicsCommandBuffers.html
 
 Shader "CommandBuffer/BlurryRefraction/SeparableGlassBlur" {
 	Properties {

@@ -1,6 +1,7 @@
 // 定义了一个简单的 Unlit Shader，来兼容我们的自定义 RP
 // 有一个写死的颜色，描述了 LightMode Tag 的使用
 // 这个着色器不兼容 SRP Batcher
+// 官方示例：https://docs.unity3d.com/Manual/srp-creating-simple-render-loop.html
 
 Shader "Examples/SimpleUnlitColor"
 {
