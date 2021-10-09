@@ -4,28 +4,26 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Profiling;
 
-namespace Catlike0102
+namespace Catlike0201
 {
+    /// <summary>
+    /// 1ã€æ–°å¢ SRP å¼€å…³
+    /// </summary>
     public class NbRenderPipelineInstance : RenderPipeline
     {
-        // NbRenderPipelineAsset renderPipelineAsset;
         CameraRenderer cameraRenderer = new CameraRenderer();
-        
-        //public NbRenderPipelineInstance(NbRenderPipelineAsset asset)
-        //{
-        //    renderPipelineAsset = asset;
-        //}
-        
-       
+
+        public NbRenderPipelineInstance()
+        {
+            // å¼€å¯ SRP batchingï¼Œå…¶å®ä¸å†™è¿™ä¸ªé»˜è®¤ä¹Ÿä¼šå¼€å¯ï¼Œä½†æˆ‘ä»¬è¿˜éœ€è¦è‡ªç”±æ§åˆ¶å¼€å¯ä¸å¦
+            GraphicsSettings.useScriptableRenderPipelineBatching = true;
+        }
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {
-            // ¼´Ê¹ÔÚÕâÀï²ÉÑù£¬Unity ¸øÏà»úµÄ 48 ×Ö½ÚÒ²ÒÀÈ»´æÔÚ
-            Profiler.BeginSample("TotalRender");
             foreach(var camera in cameras)
             {
                 cameraRenderer.Render(context, camera);
             }
-            Profiler.EndSample();
         }
     }
 }
