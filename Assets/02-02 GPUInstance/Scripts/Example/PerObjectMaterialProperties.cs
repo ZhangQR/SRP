@@ -6,7 +6,7 @@ using UnityEngine;
 // Random.value 是 UnityEngine 里面的
 using Random = UnityEngine.Random;
 
-namespace Catlike0201
+namespace Catlike0202
 {
     /// <summary>
     /// 可以让每个物体有不同的 material property
