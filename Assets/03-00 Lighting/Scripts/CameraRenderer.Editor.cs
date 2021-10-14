@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
-namespace Catlike0203
+namespace NiuBiSRP
 {
     public partial class CameraRenderer
     {

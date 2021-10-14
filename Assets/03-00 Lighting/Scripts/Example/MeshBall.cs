@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Catlike0203
+namespace NiuBiSRP
 {
     public class MeshBall : MonoBehaviour
     {
@@ -30,9 +30,8 @@ namespace Catlike0203
                     Random.insideUnitSphere * 10,
                     Quaternion.Euler(Random.value*360,Random.value*360,Random.value*360),
                     Random.Range(0.2f,0.6f)* Vector3.one);
-
-                // alpha 最小值是 0.5，是因为设置的 cutoff 固定是 0.5，baseColor 会乘 BaseTexture，所以 baseColor 小于 0.5 就看不见了
-                colorList[i] = new Vector4(Random.value, Random.value, Random.value, 1.0f);// Random.Range(0.5f,1.0f));
+                
+                colorList[i] = new Vector4(Random.value, Random.value, Random.value, 1.0f);
             }
         }
 

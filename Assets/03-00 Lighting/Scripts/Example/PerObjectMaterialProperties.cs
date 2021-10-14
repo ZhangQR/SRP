@@ -3,10 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-// Random.value 是 UnityEngine 里面的
 using Random = UnityEngine.Random;
 
-namespace Catlike0203
+namespace NiuBiSRP
 {
     public class PerObjectMaterialProperties : MonoBehaviour
     {

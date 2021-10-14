@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-// 设置 batching config
-namespace Catlike0203
+namespace NiuBiSRP
 {
     public partial class CameraRenderer
     {
@@ -19,6 +18,7 @@ namespace Catlike0203
 
 
         static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+        static ShaderTagId litShaderTagId = new ShaderTagId("NiuBiLit");
 
 
         CommandBuffer buffer = new CommandBuffer
@@ -92,6 +92,8 @@ namespace Catlike0203
                 enableDynamicBatching = useDynamicBatching,
                 enableInstancing = useGPUInstance
             };
+            // 跟 DrawUnsupportedShaders 里的一样，0 是 unlitShaderTagId，所以这里从 1 开始
+            drawingSettings.SetShaderPassName(1,litShaderTagId);
             var filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
 
             context.DrawRenderers(

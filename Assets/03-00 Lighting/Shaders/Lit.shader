@@ -1,17 +1,15 @@
-Shader "NiuBiRP/Unlit/0203"
+Shader "NiuBiRP/Lit"
 {
-    // 1、设置透明，设置 queue，blend，Zwrite
-    // 2、主贴图,贴图 property，ST，UV
-    // 3、Clip，Toggle，clip value,shader_feature
+    // 1、 设置 lightmode 并且与 draw visible object 相匹配
+    // 2、 设置 normal 并且可视化经过 interpolation normal 的变形
     Properties
     {
-        
         [MainTexture]_BaseMap("Texture",2D) = "white"{}
-        _BaseColor("BaseColor",Color) = (1,1,1,1)
+        _BaseColor("BaseColor",Color) = (0.5,0.5,0.5,1)
         [Enum(UnityEngine.Rendering.BlendMode)]_SrcBlend("Src Blend",float) = 1
         [Enum(UnityEngine.Rendering.BlendMode)]_DesBlend("Des Blend",float) = 0
         [Enum(Off,0,On,1)]_ZWrite("Z Write",float) = 0
-        _Clip("Alpha Cutoff",Range(0.0,1.0))=0.5    // cutoff
+        _Clip("Alpha Cutoff",Range(0.0,1.0))=0.5
         [Toggle(_CLIPPING)]_("Clipping",float) = 0
         
     }
@@ -19,16 +17,15 @@ Shader "NiuBiRP/Unlit/0203"
     {
         Pass
             {
-                // 设置透明混合模式			
+                Tags {"LightMode" = "NiuBiLit"}           
                 Blend [_SrcBlend] [_DesBlend]
-                // 关闭深度写入
                 ZWrite [_ZWrite]
                 HLSLPROGRAM
                 #pragma shader_feature _CLIPPING
                 #pragma multi_compile_instancing
-                #pragma vertex UnlitPassVertex
-			    #pragma fragment UnlitPassFragment
-                #include "UnlitPass.hlsl"
+                #pragma vertex LitPassVertex
+			    #pragma fragment LitPassFragment
+                #include "LitPass.hlsl"
 			    ENDHLSL
             }
     }

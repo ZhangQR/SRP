@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Catlike0203
+namespace NiuBiSRP
 {
-    [CreateAssetMenu(menuName = "Rendering/Niu Bi Render Pipeline Asset/0203",order =6)]
+    [CreateAssetMenu(menuName = "Rendering/NiuBi Render Pipeline Asset")]
     public class NbRenderPipelineAsset : RenderPipelineAsset
     {
         [SerializeField] private bool useDynamicBatching = true, useGPUInstancing = true, useSRPBatcher = true;

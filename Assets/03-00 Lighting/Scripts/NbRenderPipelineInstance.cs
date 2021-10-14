@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Profiling;
 
-namespace Catlike0203
+namespace NiuBiSRP
 {
     public class NbRenderPipelineInstance : RenderPipeline
     {
