@@ -2,6 +2,10 @@
 #define CUSTOM_LIT_PASS_INCLUDED
 
 #include "../ShaderLibrary/Common.hlsl"
+// 分好模块可以让代码看起来更简练
+#include "../ShaderLibrary/Surface.hlsl"
+#include "../ShaderLibrary/Light.hlsl"
+#include "../ShaderLibrary/Lighting.hlsl"
 
 TEXTURE2D(_BaseMap);
 SAMPLER(sampler_BaseMap);
@@ -56,14 +60,25 @@ half4 LitPassFragment (Varyings input):SV_TARGET
 
     // 在 vertex shader 的计算时逐顶点的，然后经过 interpolation，会使三角形内部的 normal 不再是单位长度
     // 所以要再进行一次 normalized，第一次 normalize 是在 vertex shader
-    return half4((abs(length(input.normalWS)-1) * 20).xxx,1.0);
-    float3 normalWS = SafeNormalize(input.normalWS);
-    return half4(normalWS.xyz,1.0);
-
+    // sreturn half4((abs(length(input.normalWS)-1) * 20).xxx,1.0);
+    // float3 normalWS = SafeNormalize(input.normalWS);
+    // return half4(normalWS.xyz,1.0);
+    
     UNITY_SETUP_INSTANCE_ID(input);
     half4 baseColor = UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial,_BaseColor);
     half4 textureColor = SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv);
     half4 finalColor = baseColor * textureColor;
+
+    // 并不会不高效，因为编译器会进行优化
+    Surface surface;
+    surface.normal = normalize(input.normalWS);
+    surface.color = finalColor.xyz;
+    surface.alpha = finalColor.a;
+    // return half4(surface.color,surface.alpha);
+    // return half4(GetLighting(surface),surface.alpha);
+
+    return half4(GetLighting(surface),surface.alpha);
+
     #if _CLIPPING
     clip(finalColor.a - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial,_Clip));
     #endif

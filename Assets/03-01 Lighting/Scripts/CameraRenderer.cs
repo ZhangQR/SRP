@@ -26,6 +26,8 @@ namespace NiuBiSRP
             name = bufferName
         };
 
+        private Lighting lighting = new Lighting();
+
 
         public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching,bool useGPUInstance)
         {
@@ -43,6 +45,10 @@ namespace NiuBiSRP
             
 
             Setup();
+            
+            // 要在设置好相机，但没绘制物体之前设置 lighting
+            lighting.Setup(context);
+            
             DrawVisibleGeometry(useDynamicBatching,useGPUInstance);
 
             DrawUnsupportedShaders();
