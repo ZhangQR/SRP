@@ -1,10 +1,12 @@
 #ifndef CUSTOM_LIGHT_INCLUDED
 #define CUSTOM_LIGHT_INCLUDED
+#define MAX_DIRECTIONAL_LIGHTS_COUNT 4
 
-// 这里是让 CPU 把主光源（一个 direction light）传给我们
+// 将 CPU 传过来的方向光信息数组存起来
 CBUFFER_START(_CustomLight)
-    float3 _DirectionalLightColor;
-    float3 _DirectionalLightDirection;
+    int _DirectionalLightCount;
+float4 _DirectionalLightColors[4];
+float4 _DirectionalLightDirections[4];
 CBUFFER_END
 
 struct Light
@@ -13,12 +15,17 @@ struct Light
     float3 direction;
 };
 
-// Get Main Light
-Light GetDirectionLight()
+
+float GetLightCount()
+{
+    return _DirectionalLightCount;
+}
+
+Light GetDirectionLight(int index)
 {
     Light light;
-    light.color = _DirectionalLightColor;
-    light.direction = _DirectionalLightDirection;
+    light.color = _DirectionalLightColors[index];
+    light.direction = _DirectionalLightDirections[index];
     return light;
 }
 

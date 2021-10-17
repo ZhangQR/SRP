@@ -17,6 +17,8 @@ namespace NiuBiSRP
             GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
             this.useDynamicBatching = useDynamicBatching;
             this.useGPUInstance = useGPUInstance;
+            // 因为直接使用了 VisibleLight.finalColor，所以这里要设置为线性
+            GraphicsSettings.lightsUseLinearIntensity = true;
         }
         protected override void Render(ScriptableRenderContext context, Camera[] cameras)
         {

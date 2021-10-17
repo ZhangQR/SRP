@@ -47,7 +47,7 @@ namespace NiuBiSRP
             Setup();
             
             // 要在设置好相机，但没绘制物体之前设置 lighting
-            lighting.Setup(context);
+            lighting.Setup(context,cullingResults);
             
             DrawVisibleGeometry(useDynamicBatching,useGPUInstance);
 
