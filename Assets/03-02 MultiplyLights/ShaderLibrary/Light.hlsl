@@ -19,6 +19,8 @@ struct Light
 float GetLightCount()
 {
     return _DirectionalLightCount;
+    // 这样可以支持 OpenGL ES 2.0 和 WebGL 1.0，因为它能将可变 loop 展开成一系列条件判断局域，但是会变得低效
+    //return min(_DirectionalLightCount,MAX_DIRECTIONAL_LIGHTS_COUNT);
 }
 
 Light GetDirectionLight(int index)

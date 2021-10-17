@@ -21,6 +21,8 @@ Shader "NiuBiRP/Lit"
                 Blend [_SrcBlend] [_DesBlend]
                 ZWrite [_ZWrite]
                 HLSLPROGRAM
+                // Equivalent to OpenGL ES 3.0.
+                #pragma target 3.5
                 #pragma shader_feature _CLIPPING
                 #pragma multi_compile_instancing
                 #pragma vertex LitPassVertex
