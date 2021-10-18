@@ -9,18 +9,18 @@ float3 IncomingLight (Surface surface, Light light) {
 }
 
 // 指定光源的光照
-float3 GetLighting(Surface surface,Light light)
+float3 GetLighting(Surface surface,BRDF brdf,Light light)
 {
-    return surface.color * IncomingLight(surface,light);
+    return surface.color * IncomingLight(surface,light) * DirectBRDF(surface,brdf,light);
 }
 
 // 将所有的灯光的影响加起来
-float3 GetLighting(Surface surface)
+float3 GetLighting(Surface surface,BRDF brdf)
 {
     float3 color = 0.0;
     for (int i = 0;i<GetLightCount();i++)
     {
-        color += GetLighting(surface,GetDirectionLight(i));
+        color += GetLighting(surface,brdf,GetDirectionLight(i));
     }
     return color;
 }

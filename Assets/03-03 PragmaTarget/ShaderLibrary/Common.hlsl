@@ -1,6 +1,8 @@
 #ifndef CUSTOM_COMMON_INCLUDED
 #define CUSTOM_COMMON_INCLUDED
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+// 里面有转换 roughness 和 smoothness 的方法
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 #include "UnityInput.hlsl"
 
 #define UNITY_MATRIX_M unity_ObjectToWorld
