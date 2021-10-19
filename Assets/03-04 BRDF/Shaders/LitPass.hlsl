@@ -71,7 +71,11 @@ half4 LitPassFragment (Varyings input):SV_TARGET
     surface.viewDirection = normalize(_WorldSpaceCameraPos-input.positionWS);
 
     BRDF brdf;
-    brdf = GetBRDF(surface);
+    #if defined(_PREMULTIPLY_ALPHA)
+    brdf = GetBRDF(surface,true);
+    #else
+    brdf = GetBRDF(surface,false);
+    #endif
 
     return half4(GetLighting(surface,brdf),surface.alpha);
 

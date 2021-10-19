@@ -8,32 +8,30 @@ struct BRDF
     float roughness;
 };
 
-// 这两种方式没什么区别
-#if defined(_TEST)
+
+#define MIN_REFLECTIVITY 0.04
+
 float OneMinusReflectivity(float metallic)
 {
     return 0.96 * (1-metallic);
 }
-#else
-#define MIN_REFLECTIVITY 0.04
 
-float OneMinusReflectivity (float metallic) {
-    float range = 1.0 - MIN_REFLECTIVITY;
-    return range - metallic * range;
-}
-#endif
+// float OneMinusReflectivity (float metallic) {
+//     float range = 1.0 - MIN_REFLECTIVITY;
+//     return range - metallic * range;
+// }
 
-BRDF GetBRDF (Surface surface)
+
+BRDF GetBRDF (Surface surface,bool isMultiplyAlpha)
 {
     BRDF brdf;
     float oneMinusReflectivity = OneMinusReflectivity(surface.metallic);
     brdf.diffuse = surface.color * oneMinusReflectivity;
-    #if defined(_TEST)
-    // 这种方式忽略了一个问题，电解质是不能改变镜面反射的颜色的，只能是白色；金属是可以改变高光颜色的
-    brdf.specular = surface.color * (1-oneMinusReflectivity);
-    #else
+    if(isMultiplyAlpha)
+    {
+        brdf.diffuse *= surface.alpha;
+    }
     brdf.specular = lerp(MIN_REFLECTIVITY, surface.color,surface.metallic);
-    #endif
     float perceptualRoughness = PerceptualSmoothnessToPerceptualRoughness(surface.smoothness);
     brdf.roughness = PerceptualRoughnessToRoughness(perceptualRoughness);
     return brdf;
