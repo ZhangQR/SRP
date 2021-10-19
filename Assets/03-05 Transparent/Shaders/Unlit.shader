@@ -9,7 +9,8 @@ Shader "NiuBiRP/Unlit"
         [Enum(UnityEngine.Rendering.BlendMode)]_DesBlend("Des Blend",float) = 0
         [Enum(Off,0,On,1)]_ZWrite("Z Write",float) = 0
         _Clip("Alpha Cutoff",Range(0.0,1.0))=0.5
-        [Toggle(_CLIPPING)]_("Clipping",float) = 0
+        // 这个属性名要跟 Lit 的一样，因为他们是用的同一个 ShaderGUI
+        [Toggle(_CLIPPING)]_CutOff("Clipping",float) = 0
         
     }
     SubShader
@@ -27,4 +28,5 @@ Shader "NiuBiRP/Unlit"
 			    ENDHLSL
             }
     }
+    CustomEditor "CustomShaderGUI"
 }

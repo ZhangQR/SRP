@@ -77,12 +77,14 @@ half4 LitPassFragment (Varyings input):SV_TARGET
     brdf = GetBRDF(surface,false);
     #endif
 
-    return half4(GetLighting(surface,brdf),surface.alpha);
-
     #if _CLIPPING
     clip(finalColor.a - UNITY_ACCESS_INSTANCED_PROP(UnityPerMaterial,_Clip));
     #endif
-    return finalColor;
+    finalColor.xyz = GetLighting(surface,brdf);
+
+    return half4(finalColor);
+
+
     
 }
 #endif
