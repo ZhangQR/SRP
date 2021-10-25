@@ -8,13 +8,14 @@ Shader "NiuBiRP/Lit"
         [Enum(UnityEngine.Rendering.BlendMode)]_DesBlend("Des Blend",float) = 0
         [Enum(Off,0,On,1)]_ZWrite("Z Write",float) = 0
         _Clip("Alpha Cutoff",Range(0.0,1.0))=0.5
-        [Toggle(_CLIPPING)]_CutOff("Cut Off",float) = 0
+        // 因为我们完全使用自定义编辑器了，所以这一项可以不要
+        // [Toggle(_CLIPPING)]_CutOff("Cut Off",float) = 0
         _Metallic("Metallic",range(0.0,1.0)) = 0
         _Smoothness("Smoothness",range(0.0,1.0)) = 0.5
         // 当组合是 One + OneMinusSrcAlpha 的时候，可以打开开关，并且在自己想要受到 Alpha 影响的地方预乘 alpha
-        [Toggle(_PREMULTIPLY_ALPHA)]_PremultiplyAlpha("Premultiply Alpha",float) = 0
+        // [Toggle(_PREMULTIPLY_ALPHA)]_PremultiplyAlpha("Premultiply Alpha",float) = 0
         // 这个属性名字虽然可以随便取，但是不能有重复
-        [Toggle(_TEST)]__("Test",float) = 0
+        // [Toggle(_TEST)]__("Test",float) = 0
         
     }
     SubShader
@@ -39,6 +40,7 @@ Shader "NiuBiRP/Lit"
 			    ENDHLSL
             }
     }
-    CustomEditor "CustomShaderGUI"
+    //CustomEditor "CustomShaderGUI"
+    CustomEditor "CustomShaderGUI2"
 }
 

@@ -53,6 +53,21 @@ public class CustomShaderGUI : ShaderGUI
         }
     }
 
+    public override void OnMaterialPreviewGUI(MaterialEditor materialEditor, Rect r, GUIStyle background)
+    {
+        // base.OnMaterialPreviewGUI(materialEditor, r, background);
+    }
+
+    // public override void OnMaterialInteractivePreviewGUI(MaterialEditor materialEditor, Rect r, GUIStyle background)
+    // {
+    //     // base.OnMaterialInteractivePreviewGUI(materialEditor, r, background);
+    // }
+
+    // public override void OnMaterialPreviewSettingsGUI(MaterialEditor materialEditor)
+    // {
+    //         base.OnMaterialPreviewSettingsGUI(materialEditor);
+    // }
+
     #region Helper
     
     /// <summary>
