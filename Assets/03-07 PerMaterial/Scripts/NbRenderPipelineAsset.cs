@@ -9,9 +9,10 @@ namespace NiuBiSRP
     public class NbRenderPipelineAsset : RenderPipelineAsset
     {
         [SerializeField] private bool useDynamicBatching = true, useGPUInstancing = true, useSRPBatcher = true;
+        [SerializeField] private ShadowSetting shadow = default;
         protected override RenderPipeline CreatePipeline()
         {
-            return new NbRenderPipelineInstance(useDynamicBatching,useGPUInstancing,useSRPBatcher);
+            return new NbRenderPipelineInstance(useDynamicBatching,useGPUInstancing,useSRPBatcher,shadow);
         }
     }
 }

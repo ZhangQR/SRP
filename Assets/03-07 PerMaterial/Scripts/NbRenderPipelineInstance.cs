@@ -11,9 +11,11 @@ namespace NiuBiSRP
         CameraRenderer cameraRenderer = new CameraRenderer();
         private bool useDynamicBatching;
         private bool useGPUInstance;
+        private ShadowSetting shadow;
 
-        public NbRenderPipelineInstance(bool useDynamicBatching,bool useGPUInstance,bool useSRPBatcher)
+        public NbRenderPipelineInstance(bool useDynamicBatching,bool useGPUInstance,bool useSRPBatcher,ShadowSetting shadow)
         {
+            this.shadow = shadow;
             GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
             this.useDynamicBatching = useDynamicBatching;
             this.useGPUInstance = useGPUInstance;
@@ -24,7 +26,7 @@ namespace NiuBiSRP
         {
             foreach(var camera in cameras)
             {
-                cameraRenderer.Render(context, camera,useDynamicBatching,useGPUInstance);
+                cameraRenderer.Render(context, camera,useDynamicBatching,useGPUInstance,shadow);
             }
         }
     }

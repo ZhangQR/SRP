@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Search;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -29,16 +30,15 @@ namespace NiuBiSRP
         private Lighting lighting = new Lighting();
 
 
-        public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching,bool useGPUInstance)
+        public void Render(ScriptableRenderContext context, Camera camera,bool useDynamicBatching,bool useGPUInstance,ShadowSetting shadow)
         {
-            
             this.context = context;
             this.camera = camera;
 
             PrepareBuffer();
             PrepareForSceneWindow();
 
-            if (!Cull())
+            if (!Cull(shadow.maxDistance))
             {
                 return;
             }
@@ -47,7 +47,7 @@ namespace NiuBiSRP
             Setup();
             
             // 要在设置好相机，但没绘制物体之前设置 lighting
-            lighting.Setup(context,cullingResults);
+            lighting.Setup(context,cullingResults,shadow);
             
             DrawVisibleGeometry(useDynamicBatching,useGPUInstance);
 
@@ -73,11 +73,13 @@ namespace NiuBiSRP
             ExecuteBuffer();
 
         }
-
-        bool Cull()
+        
+        bool Cull(float maxDistance)
         {
             if (camera.TryGetCullingParameters(out ScriptableCullingParameters p))
             {
+                // 设置阴影的最大距离
+                p.shadowDistance = Mathf.Min(camera.farClipPlane, maxDistance);
                 cullingResults = context.Cull(ref p);
                 return true;
             }

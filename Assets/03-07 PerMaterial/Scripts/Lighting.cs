@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 namespace NiuBiSRP
 {
@@ -39,11 +40,17 @@ namespace NiuBiSRP
             name = bufferName
         };
 
+        private Shadows shadows = new Shadows();
 
-        public void Setup(ScriptableRenderContext context,CullingResults cullingResults)
+
+        public void Setup(ScriptableRenderContext context,CullingResults cullingResults,ShadowSetting shadowSetting)
         {
             this.cullingResults = cullingResults;
             buffer.BeginSample(bufferName);
+            
+            // 在 Lighting 自身的 Setup 之前设置好 Shadow
+            shadows.Setup(context,cullingResults,shadowSetting);
+            
             SetupLights();
             buffer.EndSample(bufferName);
             context.ExecuteCommandBuffer(buffer);
@@ -89,6 +96,9 @@ namespace NiuBiSRP
             // 所以第三列就是 z 方向
             // 同样的，我们传过去 -z 方向
             dirLightDirections[index] = -light.localToWorldMatrix.GetColumn(2);
+            
+            // 保证传给 GPU 的 Directional Light Array Index 和 Shadow 的是一致的
+            shadows.ReserveDirectionalShadows(light.light,index);
         }
         
     }
