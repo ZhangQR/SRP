@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 
@@ -10,8 +11,10 @@ using UnityEngine.UIElements;
 public class Shadows
 {
     const string bufferName = "Shadows";
-    private const int maxShadowDirectionalLightCount = 1;
+    private const int maxShadowDirectionalLightCount = 4;
     private int shadowDirectionalLightCount = 0;
+
+    private static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
 
     struct ShadowDirectionalLight
     {
@@ -75,4 +78,79 @@ public class Shadows
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
     }
+
+    /// <summary>
+    /// 从灯光出发，将物体的深度值渲染到 RT 中，是 Shadow 的 render，却是 Lighting 的 Setup
+    /// </summary>
+    public void Render()
+    {
+        if (shadowDirectionalLightCount > 0)
+        {
+            RenderDirectionalShadows();
+        }
+        else
+        {
+            // 当不需要绘制阴影的时候，我们仍需要创建一个很小的 RT，depth 可以设置为 16,24,32,
+            buffer.GetTemporaryRT(dirShadowAtlasId,1,1,32, 
+                FilterMode.Bilinear,RenderTextureFormat.Shadowmap);
+            ExecuteBuffer();
+        }
+    }
+
+    private void RenderDirectionalShadows()
+    { 
+        int atlasSize = (int)setting.directional.altasSize;
+        buffer.GetTemporaryRT(dirShadowAtlasId,atlasSize,atlasSize,32, 
+            FilterMode.Bilinear,RenderTextureFormat.Shadowmap);
+        buffer.SetRenderTarget(dirShadowAtlasId,
+            RenderBufferLoadAction.DontCare,RenderBufferStoreAction.Store);
+        buffer.ClearRenderTarget(true,false,Color.clear);
+        buffer.BeginSample(bufferName);
+        ExecuteBuffer();
+        
+        int split = shadowDirectionalLightCount <= 1 ? 1 : 2;
+        int tileSize = atlasSize / split;
+        for(int i = 0;i<shadowDirectionalLightCount;i++)
+        {
+            var light = shadowDirectionalLights[i];
+            RenderDirecitonalShadows(i,split,tileSize);
+            
+            // 注意 setviewport 的顺序，至少要在设置 VP 之前
+            // SetViewport(split,i,tileSize);
+        }
+        buffer.EndSample(bufferName);
+        ExecuteBuffer();
+    }
+
+    private void SetViewport(int split,int index,int tileSize)
+    {
+        Vector2 offset = new Vector2(index % split, index / split);
+        offset *= tileSize;
+        buffer.SetViewport(new Rect(offset.x,offset.y,tileSize,tileSize));
+    }
+
+    private void RenderDirecitonalShadows(int index,int split,int tileSize)
+    {
+        var light = shadowDirectionalLights[index];
+        ShadowDrawingSettings shadowDrawingSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightId);
+        cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(
+            light.visibleLightId, 0, 1, Vector3.zero,
+            tileSize, 0, out Matrix4x4 viewMatrix,
+            out Matrix4x4 projMatrix, out ShadowSplitData shadowSplitData);
+        shadowDrawingSettings.splitData = shadowSplitData;
+        SetViewport(split, index, tileSize);
+        buffer.SetViewProjectionMatrices(viewMatrix,projMatrix);
+        ExecuteBuffer();
+        context.DrawShadows(ref shadowDrawingSettings);
+    }
+
+    /// <summary>
+    /// 清除 buffer 和 RT
+    /// </summary>
+    public void CleanUp()
+    {
+        buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        ExecuteBuffer();
+    }
+
 }

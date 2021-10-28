@@ -39,6 +39,21 @@ Shader "NiuBiRP/Lit"
                 #include "LitPass.hlsl"
 			    ENDHLSL
             }
+        Pass
+        {
+            Tags {"LightMode" = "ShadowCaster"}
+            // 我们只需要用到 depth buffer   
+            ColorMask 0
+            HLSLPROGRAM
+            #pragma target 3.5
+            #pragma shader_feature _CLIPPING
+            #pragma multi_compile_instancing
+            #pragma vertex ShadowCasterPassVertex
+			#pragma fragment ShadowCasterPassFragment
+            #include "ShadowCasterPass.hlsl"
+			ENDHLSL
+        }        
+        
     }
     //CustomEditor "CustomShaderGUI"
     CustomEditor "CustomShaderGUI2"

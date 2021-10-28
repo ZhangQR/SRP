@@ -43,26 +43,35 @@ namespace NiuBiSRP
                 return;
             }
             
-
-            Setup();
-            
-            // 要在设置好相机，但没绘制物体之前设置 lighting
+            buffer.BeginSample(SampleName);
+            // 一般来说 BeginSample 后面要紧挨着一句 execute
+            ExecuteBuffer();
+            // 1、设置好灯光信息 2、绘制好 Shadow Map
             lighting.Setup(context,cullingResults,shadow);
+            buffer.EndSample(SampleName);
+            
+
+            // 因为在 Lighting 中要设置 VP 和 Render Target，所以要将我们的相机设置移到后面
+            // 不然 object 会绘制到 shadow map 上，报错 Dimensions of color surface does not match dimensions of depth
+            Setup();
             
             DrawVisibleGeometry(useDynamicBatching,useGPUInstance);
 
             DrawUnsupportedShaders();
 
             DrawGizmos();
+            // 在提交之前释放 Shadow Map 的 RT
+            lighting.CleanUp();
             Submit();
         }
 
         void Setup()
         {
+            // 之前的 RT 是 shadow map,极有可能是在这里变回了 camera
             context.SetupCameraProperties(camera);
             
             CameraClearFlags flags = camera.clearFlags;
-
+            
             buffer.ClearRenderTarget(
                 flags <= CameraClearFlags.Depth,
                 flags <= CameraClearFlags.SolidColor,

@@ -46,13 +46,14 @@ namespace NiuBiSRP
         public void Setup(ScriptableRenderContext context,CullingResults cullingResults,ShadowSetting shadowSetting)
         {
             this.cullingResults = cullingResults;
-            buffer.BeginSample(bufferName);
-            
-            // 在 Lighting 自身的 Setup 之前设置好 Shadow
+            // buffer.BeginSample(bufferName);
             shadows.Setup(context,cullingResults,shadowSetting);
-            
             SetupLights();
-            buffer.EndSample(bufferName);
+            
+            // 是 Shadow 的 Render，却是 Lighting 的 Setup
+            shadows.Render();
+            
+            // buffer.EndSample(bufferName);
             context.ExecuteCommandBuffer(buffer);
             buffer.Clear();
         }
@@ -99,6 +100,11 @@ namespace NiuBiSRP
             
             // 保证传给 GPU 的 Directional Light Array Index 和 Shadow 的是一致的
             shadows.ReserveDirectionalShadows(light.light,index);
+        }
+
+        public void CleanUp()
+        {
+            shadows.CleanUp();
         }
         
     }
