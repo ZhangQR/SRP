@@ -15,6 +15,9 @@ public class Shadows
     private int shadowDirectionalLightCount = 0;
 
     private static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
+    private static int dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices");
+
+    private Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowDirectionalLightCount];
 
     struct ShadowDirectionalLight
     {
@@ -53,7 +56,7 @@ public class Shadows
     /// </summary>
     /// <param name="light"></param>
     /// <param name="visibleLightId"></param>
-    public void ReserveDirectionalShadows(Light light,int visibleLightId)
+    public Vector2 ReserveDirectionalShadows(Light light,int visibleLightId)
     {
         if (shadowDirectionalLightCount < maxShadowDirectionalLightCount &&
             light.shadowStrength > 0 && light.shadows != LightShadows.None &&
@@ -62,12 +65,14 @@ public class Shadows
         {
             // shadowDirectionalLightCount 是 shadow array 的 id，
             // visibleLightId 是 Directional Light Array 的 Id
-            shadowDirectionalLights[shadowDirectionalLightCount++] =
+            shadowDirectionalLights[shadowDirectionalLightCount] =
                 new ShadowDirectionalLight
                 {
                     visibleLightId = visibleLightId
                 };
+            return new Vector2(light.shadowStrength, shadowDirectionalLightCount++);
         }
+        return Vector2.zero;
     }
 
     /// <summary>
@@ -112,21 +117,22 @@ public class Shadows
         int tileSize = atlasSize / split;
         for(int i = 0;i<shadowDirectionalLightCount;i++)
         {
-            var light = shadowDirectionalLights[i];
             RenderDirecitonalShadows(i,split,tileSize);
             
             // 注意 setviewport 的顺序，至少要在设置 VP 之前
             // SetViewport(split,i,tileSize);
         }
+        
+        buffer.SetGlobalMatrixArray(dirShadowMatricesId,dirShadowMatrices);
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
 
-    private void SetViewport(int split,int index,int tileSize)
+    private Vector2 SetViewport(int split,int index,int tileSize)
     {
         Vector2 offset = new Vector2(index % split, index / split);
-        offset *= tileSize;
-        buffer.SetViewport(new Rect(offset.x,offset.y,tileSize,tileSize));
+        buffer.SetViewport(new Rect(offset.x * tileSize,offset.y * tileSize,tileSize,tileSize));
+        return offset;
     }
 
     private void RenderDirecitonalShadows(int index,int split,int tileSize)
@@ -138,10 +144,71 @@ public class Shadows
             tileSize, 0, out Matrix4x4 viewMatrix,
             out Matrix4x4 projMatrix, out ShadowSplitData shadowSplitData);
         shadowDrawingSettings.splitData = shadowSplitData;
-        SetViewport(split, index, tileSize);
+        // 准备 shadow matrices，并传给 GPU
+        dirShadowMatrices[index] = ConvertToAtlasMatrix(projMatrix * viewMatrix,
+            SetViewport(split, index, tileSize),split);
         buffer.SetViewProjectionMatrices(viewMatrix,projMatrix);
+        
+
+
         ExecuteBuffer();
         context.DrawShadows(ref shadowDrawingSettings);
+        
+    }
+
+    /// <summary>
+    /// 将 vp 矩阵处理成符合分块的形式
+    /// </summary>
+    /// <param name="vpMatrix"></param>
+    /// <param name="offset"></param>
+    /// <param name="split"></param>
+    /// <returns></returns>
+    private Matrix4x4 ConvertToAtlasMatrix(Matrix4x4 m, Vector2 offset, int split)
+    {
+        if (SystemInfo.usesReversedZBuffer)
+        {
+            m.m20 = -m.m20;
+            m.m21 = -m.m21;
+            m.m22 = -m.m22;
+            m.m23 = -m.m23;
+        }
+        // 将 [-1,1] 转换到 [0,1]
+        m.m00 = 0.5f * (m.m00 + m.m30);
+        m.m01 = 0.5f * (m.m01 + m.m31);
+        m.m02 = 0.5f * (m.m02 + m.m32);
+        m.m03 = 0.5f * (m.m03 + m.m33);
+        m.m10 = 0.5f * (m.m10 + m.m30);
+        m.m11 = 0.5f * (m.m11 + m.m31);
+        m.m12 = 0.5f * (m.m12 + m.m32);
+        m.m13 = 0.5f * (m.m13 + m.m33);
+        m.m20 = 0.5f * (m.m20 + m.m30);
+        m.m21 = 0.5f * (m.m21 + m.m31);
+        m.m22 = 0.5f * (m.m22 + m.m32);
+        m.m23 = 0.5f * (m.m23 + m.m33);
+        
+        // 进行分块
+        float scale = 1f / split;
+        m.m00 = (m.m00 + offset.x * m.m30) * scale;
+        m.m01 = (m.m01 + offset.x * m.m31) * scale;
+        m.m02 = (m.m02 + offset.x * m.m32) * scale;
+        m.m03 = (m.m03 + offset.x * m.m33) * scale;
+        m.m10 = (m.m10 + offset.y * m.m30) * scale;
+        m.m11 = (m.m11 + offset.y * m.m31) * scale;
+        m.m12 = (m.m12 + offset.y * m.m32) * scale;
+        m.m13 = (m.m13 + offset.y * m.m33) * scale;
+        
+        // 上面两步可以合在一起写：
+        // float scale = 1f / split;
+        // m.m00 = (0.5f * (m.m00 + m.m30) + offset.x * m.m30) * scale;
+        // m.m01 = (0.5f * (m.m01 + m.m31) + offset.x * m.m31) * scale;
+        // m.m02 = (0.5f * (m.m02 + m.m32) + offset.x * m.m32) * scale;
+        // m.m03 = (0.5f * (m.m03 + m.m33) + offset.x * m.m33) * scale;
+        // m.m10 = (0.5f * (m.m10 + m.m30) + offset.y * m.m30) * scale;
+        // m.m11 = (0.5f * (m.m11 + m.m31) + offset.y * m.m31) * scale;
+        // m.m12 = (0.5f * (m.m12 + m.m32) + offset.y * m.m32) * scale;
+        // m.m13 = (0.5f * (m.m13 + m.m33) + offset.y * m.m33) * scale;
+        
+        return m;
     }
 
     /// <summary>

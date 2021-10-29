@@ -5,16 +5,17 @@
 // 将 CPU 传过来的方向光信息数组存起来
 CBUFFER_START(_CustomLight)
     int _DirectionalLightCount;
-float3 _DirectionalLightColors[4];
-float3 _DirectionalLightDirections[4];
+    float3 _DirectionalLightColors[MAX_DIRECTIONAL_LIGHTS_COUNT];
+    float3 _DirectionalLightDirections[MAX_DIRECTIONAL_LIGHTS_COUNT];
+    float2 _DirectionalLightShadowData[MAX_DIRECTIONAL_LIGHTS_COUNT];
 CBUFFER_END
 
 struct Light
 {
     float3 color;
     float3 direction;
+    float attenuation;  // 阴影影响到的光照衰减，0表示完全在阴影中，1表示完全不在阴影中
 };
-
 
 float GetLightCount()
 {
@@ -23,11 +24,20 @@ float GetLightCount()
     //return min(_DirectionalLightCount,MAX_DIRECTIONAL_LIGHTS_COUNT);
 }
 
-Light GetDirectionLight(int index)
+DirectionalShadowData GetDirectionalShadowData(int index)
+{
+    DirectionalShadowData data;
+    data.strength = _DirectionalLightShadowData[index].x;
+    data.tileIndex = _DirectionalLightShadowData[index].y;
+    return data;
+}
+
+Light GetDirectionLight(int index,Surface surfaceWS)
 {
     Light light;
     light.color = _DirectionalLightColors[index];
     light.direction = _DirectionalLightDirections[index];
+    light.attenuation = GetDirectionalShadowAttenuation(GetDirectionalShadowData(index),surfaceWS);
     return light;
 }
 

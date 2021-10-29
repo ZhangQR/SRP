@@ -22,16 +22,12 @@ namespace NiuBiSRP
         private static int dirLightColorId = Shader.PropertyToID("_DirectionalLightColors");
         private static int dirLightDirectionId = Shader.PropertyToID("_DirectionalLightDirections");
         private static int dirLightCountId = Shader.PropertyToID("_DirectionalLightCount");
+        private static int dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData"); 
         
-        // 传给 GPU 的方向光信息数组，不用 structured buffers 是因为 shader 对 struct 的支持并不好
-        // 1、只能用在 fragment shader
-        // 2、性能没有常规数组好
-        // 并且 CPU 和 GPU 之间的数据传送，只在几个地方出现，所以修改起来也很方便
-        // 基于以上原因，这里直接使用数组，而不使用 structured buffers
         private static Vector4[] dirLightColors = new Vector4[maxDirectionalLightCount];
         private static Vector4[] dirLightDirections = new Vector4[maxDirectionalLightCount];
-
-        // 因为我们只在乎可见光，所以获取 CameraRenderer 中的 CullResults 
+        private static Vector4[] dirLightShadowData = new Vector4[maxDirectionalLightCount];
+        
         private CullingResults cullingResults;
         
 
@@ -46,14 +42,14 @@ namespace NiuBiSRP
         public void Setup(ScriptableRenderContext context,CullingResults cullingResults,ShadowSetting shadowSetting)
         {
             this.cullingResults = cullingResults;
-            // buffer.BeginSample(bufferName);
+            buffer.BeginSample(bufferName);
             shadows.Setup(context,cullingResults,shadowSetting);
             SetupLights();
             
             // 是 Shadow 的 Render，却是 Lighting 的 Setup
             shadows.Render();
             
-            // buffer.EndSample(bufferName);
+            buffer.EndSample(bufferName);
             context.ExecuteCommandBuffer(buffer);
             buffer.Clear();
         }
@@ -87,6 +83,7 @@ namespace NiuBiSRP
             buffer.SetGlobalInt(dirLightCountId,length);
             buffer.SetGlobalVectorArray(dirLightColorId,dirLightColors);
             buffer.SetGlobalVectorArray(dirLightDirectionId,dirLightDirections);
+            buffer.SetGlobalVectorArray(dirLightShadowDataId,dirLightShadowData);;
         }
 
         private void SetupDirectionalLight(int index, ref VisibleLight light)
@@ -98,8 +95,7 @@ namespace NiuBiSRP
             // 同样的，我们传过去 -z 方向
             dirLightDirections[index] = -light.localToWorldMatrix.GetColumn(2);
             
-            // 保证传给 GPU 的 Directional Light Array Index 和 Shadow 的是一致的
-            shadows.ReserveDirectionalShadows(light.light,index);
+            dirLightShadowData[index] = shadows.ReserveDirectionalShadows(light.light,index);
         }
 
         public void CleanUp()

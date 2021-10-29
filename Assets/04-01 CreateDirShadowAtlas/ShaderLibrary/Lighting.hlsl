@@ -5,13 +5,13 @@
 float3 IncomingLight (Surface surface, Light light) {
     // 半波兰特
     // return saturate(0.5 * dot(surface.normal, light.direction) + 0.5) * light.color;
-    return saturate(dot(surface.normal, light.direction)) * light.color;
+    return saturate(dot(surface.normal, light.direction) * light.attenuation) * light.color;
 }
 
 // 指定光源的光照
-float3 GetLighting(Surface surface,BRDF brdf,Light light)
+float3 GetLighting(Surface surfaceWS,BRDF brdf,Light light)
 {
-    return surface.color * IncomingLight(surface,light) * DirectBRDF(surface,brdf,light);
+    return surfaceWS.color * IncomingLight(surfaceWS,light) * DirectBRDF(surfaceWS,brdf,light);
 }
 
 // 将所有的灯光的影响加起来
@@ -20,7 +20,7 @@ float3 GetLighting(Surface surface,BRDF brdf)
     float3 color = 0.0;
     for (int i = 0;i<GetLightCount();i++)
     {
-        color += GetLighting(surface,brdf,GetDirectionLight(i));
+        color += GetLighting(surface,brdf,GetDirectionLight(i,surface));
     }
     return color;
 }
