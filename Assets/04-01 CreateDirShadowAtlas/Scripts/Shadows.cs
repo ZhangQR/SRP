@@ -11,13 +11,13 @@ using UnityEngine.UIElements;
 public class Shadows
 {
     const string bufferName = "Shadows";
-    private const int maxShadowDirectionalLightCount = 4;
+    private const int maxShadowDirectionalLightCount = 4,maxCascades = 4;
     private int shadowDirectionalLightCount = 0;
 
     private static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
     private static int dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices");
 
-    private Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowDirectionalLightCount];
+    private Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowDirectionalLightCount * maxCascades];
 
     struct ShadowDirectionalLight
     {
@@ -39,7 +39,7 @@ public class Shadows
     /// 保留传过来的参数，在 Lighting 的 setup 之前
     /// </summary>
     /// <param name="context"></param>
-    /// <param name="cull"></param>
+    /// <param name="cull"></para   m>
     /// <param name="shadowSetting"></param>
     public void Setup(ScriptableRenderContext context,CullingResults cull,
         ShadowSetting shadowSetting)
@@ -70,7 +70,7 @@ public class Shadows
                 {
                     visibleLightId = visibleLightId
                 };
-            return new Vector2(light.shadowStrength, shadowDirectionalLightCount++);
+            return new Vector2(light.shadowStrength, setting.directional.CascadeCount * shadowDirectionalLightCount++);
         }
         return Vector2.zero;
     }
@@ -113,7 +113,9 @@ public class Shadows
         buffer.BeginSample(bufferName);
         ExecuteBuffer();
         
-        int split = shadowDirectionalLightCount <= 1 ? 1 : 2;
+        // 只支持 1,2,4，即只能分 1,4,16 块
+        int tiles = shadowDirectionalLightCount * setting.directional.CascadeCount;
+        int split = tiles <= 1 ? 1 : tiles <= 4 ? 2 : 4;
         int tileSize = atlasSize / split;
         for(int i = 0;i<shadowDirectionalLightCount;i++)
         {
@@ -139,21 +141,23 @@ public class Shadows
     {
         var light = shadowDirectionalLights[index];
         ShadowDrawingSettings shadowDrawingSettings = new ShadowDrawingSettings(cullingResults, light.visibleLightId);
-        cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(
-            light.visibleLightId, 0, 1, Vector3.zero,
-            tileSize, 0, out Matrix4x4 viewMatrix,
-            out Matrix4x4 projMatrix, out ShadowSplitData shadowSplitData);
-        shadowDrawingSettings.splitData = shadowSplitData;
-        // 准备 shadow matrices，并传给 GPU
-        dirShadowMatrices[index] = ConvertToAtlasMatrix(projMatrix * viewMatrix,
-            SetViewport(split, index, tileSize),split);
-        buffer.SetViewProjectionMatrices(viewMatrix,projMatrix);
-        
-
-
-        ExecuteBuffer();
-        context.DrawShadows(ref shadowDrawingSettings);
-        
+        int cascadeCount = setting.directional.CascadeCount;
+        int tileOffset = index * cascadeCount;
+        Vector3 ratios = setting.directional.CascadeRatios;
+        for (int i = 0; i < cascadeCount; i++)
+        {
+            cullingResults.ComputeDirectionalShadowMatricesAndCullingPrimitives(
+                light.visibleLightId, i, cascadeCount, ratios,
+                tileSize, 0, out Matrix4x4 viewMatrix,
+                out Matrix4x4 projMatrix, out ShadowSplitData shadowSplitData);
+            shadowDrawingSettings.splitData = shadowSplitData;
+            int tileIndex = tileOffset + i;
+            dirShadowMatrices[tileIndex] = ConvertToAtlasMatrix(projMatrix * viewMatrix,
+                SetViewport(split, tileIndex, tileSize), split);
+            buffer.SetViewProjectionMatrices(viewMatrix, projMatrix);
+            ExecuteBuffer();
+            context.DrawShadows(ref shadowDrawingSettings);
+        }
     }
 
     /// <summary>

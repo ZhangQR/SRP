@@ -7,7 +7,7 @@ public class ShadowSetting
 {
     [Min(0f)]
     public float maxDistance = 100;
-    
+
     public enum TextureSize
     {
         _128 = 128,
@@ -22,11 +22,21 @@ public class ShadowSetting
     public struct Directional
     {
         public TextureSize altasSize;
+        [Range(1, 4)] public int CascadeCount; 
+        [Range(0.0f, 1.0f)] public float CascadeRatio1, CascadeRatio2, CascadeRatio3;
+        
+        // ComputeDirectionalShadowMatricesAndCullingPrimitives 需要用到 Vector3 形式的
+        public Vector3 CascadeRatios =>
+            new Vector3(CascadeRatio1, CascadeRatio2, CascadeRatio3);
     }
 
     // 设置默认值
     public Directional directional = new Directional
     {
-        altasSize = TextureSize._256
+        altasSize = TextureSize._256,
+        CascadeCount = 1,
+        CascadeRatio1 = 0.1f,
+        CascadeRatio2 = 0.25f,
+        CascadeRatio3 = 0.5f
     };
 }
