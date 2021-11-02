@@ -6,8 +6,12 @@ using UnityEngine;
 public class ShadowSetting
 {
     // 基于 view space depth
-    [Min(0f)]
+    // 因为要作为分母，所以限制最小值不为 0
+    [Min(0.001f)]
     public float maxDistance = 100;
+    
+    // 因为要作为分母，所以限制最小值不为 0
+    [Range(0.001f, 1.0f)] public float distanceFade = 1;
 
     public enum TextureSize
     {
@@ -25,6 +29,7 @@ public class ShadowSetting
         public TextureSize altasSize;
         [Range(1, 4)] public int CascadeCount; 
         [Range(0.0f, 1.0f)] public float CascadeRatio1, CascadeRatio2, CascadeRatio3;
+        [Range(0.001f, 1.0f)] public float CascadeFade;
         
         // ComputeDirectionalShadowMatricesAndCullingPrimitives 需要用到 Vector3 形式的
         public Vector3 CascadeRatios =>
@@ -38,6 +43,7 @@ public class ShadowSetting
         CascadeCount = 1,
         CascadeRatio1 = 0.1f,
         CascadeRatio2 = 0.25f,
-        CascadeRatio3 = 0.5f
+        CascadeRatio3 = 0.5f,
+        CascadeFade = 0.1f
     };
 }

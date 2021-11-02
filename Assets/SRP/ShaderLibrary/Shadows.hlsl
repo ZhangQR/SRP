@@ -11,7 +11,7 @@ CBUFFER_START(_CustomShadows)
     float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
     int _CascadeCount;
     float4 _CascadeCullSpheres[MAX_CASCADE_COUNT];
-    float _ShaderDistance;
+    float4 _ShaderDistanceFade; // x: 1/maxShadowDistance, y:1/distanceFade ,z:1/(1-(1-cascadeFade)^2)
 CBUFFER_END
 
 // 1 完全在阴影中
@@ -28,11 +28,21 @@ struct ShadowData
     float strength;
 };
 
+// 在边缘渐变，公式： (1-d/m)/fade
+// d: depth
+// m: maxDistance
+// fade: 0-1, 1 绘制阴影，0 不绘制阴影
+float FadedShadowStrength (float distance,float oneUpFade,float oneUpMax)
+{
+    return saturate((1-distance*oneUpMax)*oneUpFade);
+}
+
 ShadowData GetShadowData(Surface surfaceWS)
 {
     ShadowData shadowData;
     // 当超出最大距离时，也没有阴影，是 culling plane
-    shadowData.strength = surfaceWS.depth<_ShaderDistance?1.0f:0.0f;
+    shadowData.strength = FadedShadowStrength(
+        surfaceWS.depth,_ShaderDistanceFade.y,_ShaderDistanceFade.x);
     int i = 0;
     for(; i<_CascadeCount; i++)
     {
@@ -40,6 +50,12 @@ ShadowData GetShadowData(Surface surfaceWS)
         float distanceSqr = DistanceSquared(surfaceWS.position, sphere.xyz); 
         if(distanceSqr < sphere.w)
         {
+            // 最后一个 cascade 进行边缘渐变
+            if(i == _CascadeCount-1)
+            {
+                shadowData.strength *= FadedShadowStrength(
+                    distanceSqr,_ShaderDistanceFade.z,1/sphere.w);
+            }
             break;
         }
     }

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -18,9 +19,8 @@ public class Shadows
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
         cascadeCountId = Shader.PropertyToID("_CascadeCount"),
         cascadeCullSpheresId = Shader.PropertyToID("_CascadeCullSpheres"),
-        
-        // shadow 的最大距离，view space depth
-        shadowDistanceId = Shader.PropertyToID("_ShaderDistance");
+        // float2 y:1/DistanceFade  x:1/maxDistance z:1/(1-(1-cascadeFade)^2)
+        shadowDistanceFadeId = Shader.PropertyToID("_ShaderDistanceFade");
 
     private Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowDirectionalLightCount * maxCascades];
     // 每个灯光都可以使用一套 cullSphere
@@ -131,7 +131,10 @@ public class Shadows
         buffer.SetGlobalInt(cascadeCountId,setting.directional.CascadeCount);
         buffer.SetGlobalVectorArray(cascadeCullSpheresId,cascadeCullSpheres);
         buffer.SetGlobalMatrixArray(dirShadowMatricesId,dirShadowMatrices);
-        buffer.SetGlobalFloat(shadowDistanceId,setting.maxDistance);
+        float f = 1 - setting.directional.CascadeFade; 
+        buffer.SetGlobalVector(shadowDistanceFadeId,
+            new Vector4(1 / setting.maxDistance,1 / setting.distanceFade,
+                1/(1f-f * f)));
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
