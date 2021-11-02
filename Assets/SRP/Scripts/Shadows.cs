@@ -17,7 +17,10 @@ public class Shadows
     private static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
         dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
         cascadeCountId = Shader.PropertyToID("_CascadeCount"),
-        cascadeCullSpheresId = Shader.PropertyToID("_CascadeCullSpheres");
+        cascadeCullSpheresId = Shader.PropertyToID("_CascadeCullSpheres"),
+        
+        // shadow 的最大距离，view space depth
+        shadowDistanceId = Shader.PropertyToID("_ShaderDistance");
 
     private Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowDirectionalLightCount * maxCascades];
     // 每个灯光都可以使用一套 cullSphere
@@ -128,6 +131,7 @@ public class Shadows
         buffer.SetGlobalInt(cascadeCountId,setting.directional.CascadeCount);
         buffer.SetGlobalVectorArray(cascadeCullSpheresId,cascadeCullSpheres);
         buffer.SetGlobalMatrixArray(dirShadowMatricesId,dirShadowMatrices);
+        buffer.SetGlobalFloat(shadowDistanceId,setting.maxDistance);
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }

@@ -7,6 +7,7 @@ struct Surface
     float3 color;
     float3 viewDirection;
     float3 position;
+    float depth;    // view space depth
     float alpha;
     float metallic;
     float smoothness;

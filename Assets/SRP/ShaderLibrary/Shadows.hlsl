@@ -11,6 +11,7 @@ CBUFFER_START(_CustomShadows)
     float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
     int _CascadeCount;
     float4 _CascadeCullSpheres[MAX_CASCADE_COUNT];
+    float _ShaderDistance;
 CBUFFER_END
 
 // 1 完全在阴影中
@@ -30,7 +31,8 @@ struct ShadowData
 ShadowData GetShadowData(Surface surfaceWS)
 {
     ShadowData shadowData;
-    shadowData.strength = 1.0f  ;
+    // 当超出最大距离时，也没有阴影，是 culling plane
+    shadowData.strength = surfaceWS.depth<_ShaderDistance?1.0f:0.0f;
     int i = 0;
     for(; i<_CascadeCount; i++)
     {
@@ -41,6 +43,7 @@ ShadowData GetShadowData(Surface surfaceWS)
             break;
         }
     }
+    // 当超出最大 cascade 的时候，没有阴影，是 culling sphere
     if(i == _CascadeCount)
     {
         shadowData.strength = 0;

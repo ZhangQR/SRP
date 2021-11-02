@@ -5,6 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public class ShadowSetting
 {
+    // 基于 view space depth
     [Min(0f)]
     public float maxDistance = 100;
 
