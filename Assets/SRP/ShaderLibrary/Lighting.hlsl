@@ -15,12 +15,14 @@ float3 GetLighting(Surface surfaceWS,BRDF brdf,Light light)
 }
 
 // 将所有的灯光的影响加起来
-float3 GetLighting(Surface surface,BRDF brdf)
+float3 GetLighting(Surface surfaceWS,BRDF brdf)
 {
     float3 color = 0.0;
+    ShadowData shadowData = GetShadowData(surfaceWS);
     for (int i = 0;i<GetLightCount();i++)
     {
-        color += GetLighting(surface,brdf,GetDirectionLight(i,surface));
+        Light light = GetDirectionLight(i,surfaceWS,shadowData);
+        color += GetLighting(surfaceWS,brdf,light);
     }
     return color;
 }

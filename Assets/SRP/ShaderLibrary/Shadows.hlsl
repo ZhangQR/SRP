@@ -9,13 +9,45 @@ SAMPLER_CMP(SHADOW_SAMPLER);
 
 CBUFFER_START(_CustomShadows)
     float4x4 _DirectionalShadowMatrices[MAX_SHADOWED_DIRECTIONAL_LIGHT_COUNT * MAX_CASCADE_COUNT];
+    int _CascadeCount;
+    float4 _CascadeCullSpheres[MAX_CASCADE_COUNT];
 CBUFFER_END
 
+// 1 完全在阴影中
 struct DirectionalShadowData
 {
     float strength;
     int tileIndex;
 };
+
+struct ShadowData
+{
+    int cascadeIndex;
+    // 0 表示没有阴影
+    float strength;
+};
+
+ShadowData GetShadowData(Surface surfaceWS)
+{
+    ShadowData shadowData;
+    shadowData.strength = 1.0f  ;
+    int i = 0;
+    for(; i<_CascadeCount; i++)
+    {
+        float4 sphere = _CascadeCullSpheres[i];
+        float distanceSqr = DistanceSquared(surfaceWS.position, sphere.xyz); 
+        if(distanceSqr < sphere.w)
+        {
+            break;
+        }
+    }
+    if(i == _CascadeCount)
+    {
+        shadowData.strength = 0;
+    }
+    shadowData.cascadeIndex = i;
+    return shadowData;
+}
 
 // sts = shadow texture space
 // return: 0-1 0完全在阴影中，1完全不在阴影中

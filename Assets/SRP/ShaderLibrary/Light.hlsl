@@ -24,20 +24,23 @@ float GetLightCount()
     //return min(_DirectionalLightCount,MAX_DIRECTIONAL_LIGHTS_COUNT);
 }
 
-DirectionalShadowData GetDirectionalShadowData(int index)
+// 1 完全在阴影中
+DirectionalShadowData GetDirectionalShadowData(int index,ShadowData shadowData)
 {
     DirectionalShadowData data;
-    data.strength = _DirectionalLightShadowData[index].x;
-    data.tileIndex = _DirectionalLightShadowData[index].y;
+    data.strength = _DirectionalLightShadowData[index].x * shadowData.strength;
+    data.tileIndex = _DirectionalLightShadowData[index].y + shadowData.cascadeIndex;
     return data;
-}
+}   
 
-Light GetDirectionLight(int index,Surface surfaceWS)
+Light GetDirectionLight(int index,Surface surfaceWS,ShadowData shadowData)
 {
     Light light;
     light.color = _DirectionalLightColors[index];
     light.direction = _DirectionalLightDirections[index];
-    light.attenuation = GetDirectionalShadowAttenuation(GetDirectionalShadowData(index),surfaceWS);
+    light.attenuation = GetDirectionalShadowAttenuation(GetDirectionalShadowData(index,shadowData),surfaceWS);
+    // 用于可视化阴影的 cascade 分界线
+    // light.attenuation *= shadowData.cascadeIndex * 0.25f;
     return light;
 }
 

@@ -14,10 +14,14 @@ public class Shadows
     private const int maxShadowDirectionalLightCount = 4,maxCascades = 4;
     private int shadowDirectionalLightCount = 0;
 
-    private static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
-    private static int dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices");
+    private static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas"),
+        dirShadowMatricesId = Shader.PropertyToID("_DirectionalShadowMatrices"),
+        cascadeCountId = Shader.PropertyToID("_CascadeCount"),
+        cascadeCullSpheresId = Shader.PropertyToID("_CascadeCullSpheres");
 
     private Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowDirectionalLightCount * maxCascades];
+    // 每个灯光都可以使用一套 cullSphere
+    private Vector4[] cascadeCullSpheres = new Vector4[maxCascades];
 
     struct ShadowDirectionalLight
     {
@@ -120,11 +124,9 @@ public class Shadows
         for(int i = 0;i<shadowDirectionalLightCount;i++)
         {
             RenderDirecitonalShadows(i,split,tileSize);
-            
-            // 注意 setviewport 的顺序，至少要在设置 VP 之前
-            // SetViewport(split,i,tileSize);
         }
-        
+        buffer.SetGlobalInt(cascadeCountId,setting.directional.CascadeCount);
+        buffer.SetGlobalVectorArray(cascadeCullSpheresId,cascadeCullSpheres);
         buffer.SetGlobalMatrixArray(dirShadowMatricesId,dirShadowMatrices);
         buffer.EndSample(bufferName);
         ExecuteBuffer();
@@ -155,6 +157,13 @@ public class Shadows
             dirShadowMatrices[tileIndex] = ConvertToAtlasMatrix(projMatrix * viewMatrix,
                 SetViewport(split, tileIndex, tileSize), split);
             buffer.SetViewProjectionMatrices(viewMatrix, projMatrix);
+            if (index == 0)
+            {
+                var cullingsphere = shadowSplitData.cullingSphere;
+                // 因为在 shader 中只要用到平方
+                cullingsphere.w *= cullingsphere.w;
+                cascadeCullSpheres[i] = cullingsphere;
+            }
             ExecuteBuffer();
             context.DrawShadows(ref shadowDrawingSettings);
         }
