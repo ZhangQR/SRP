@@ -12,6 +12,7 @@ CBUFFER_START(_CustomShadows)
     int _CascadeCount;
     float4 _CascadeCullSpheres[MAX_CASCADE_COUNT];
     float4 _ShaderDistanceFade; // x: 1/maxShadowDistance, y:1/distanceFade ,z:1/(1-(1-cascadeFade)^2)
+    float4 _CascadeData[MAX_CASCADE_COUNT];//x: 1/cullSphere.w(半径)
 CBUFFER_END
 
 // 1 完全在阴影中
@@ -19,6 +20,7 @@ struct DirectionalShadowData
 {
     float strength;
     int tileIndex;
+    float normalBias;
 };
 
 struct ShadowData
@@ -54,7 +56,7 @@ ShadowData GetShadowData(Surface surfaceWS)
             if(i == _CascadeCount-1)
             {
                 shadowData.strength *= FadedShadowStrength(
-                    distanceSqr,_ShaderDistanceFade.z,1/sphere.w);
+                    distanceSqr,_ShaderDistanceFade.z,_CascadeData[i].x);
             }
             break;
         }
@@ -75,17 +77,20 @@ float SampleDirectionalShadowAtlas(float3 positionSTS)
     return SAMPLE_TEXTURE2D_SHADOW(_DirectionalShadowAtlas,SHADOW_SAMPLER,positionSTS);
 }
 
-float GetDirectionalShadowAttenuation(DirectionalShadowData data,Surface surfaceWS)
+float GetDirectionalShadowAttenuation(DirectionalShadowData  directional,
+    ShadowData global,Surface surfaceWS)
 {
     // 当灯光完全不需要绘制阴影的时候，data 是 0,0，可以直接跳过，并且不会影响效率，因为分支的选择都一样
     // 这里不加这个判断结果是一样，但是要多采样一次，影响效率
-    if(data.strength<=0)
+    if(directional.strength<=0)
     {
         return 1.0f;
     }
-
-    float3 positionSTS = mul(_DirectionalShadowMatrices[data.tileIndex],float4(surfaceWS.position,1)).xyz;
-    float strength = data.strength;
+    float3 normalBias = surfaceWS.normal *
+        (directional.normalBias *_CascadeData[global.cascadeIndex].y);
+    float3 positionSTS = mul(_DirectionalShadowMatrices[directional.tileIndex],
+        float4(surfaceWS.position + normalBias,1)).xyz;
+    float strength = directional.strength;
     // strength 跟 attenuation 是相反的
     return lerp(1,SampleDirectionalShadowAtlas(positionSTS),strength);
 }

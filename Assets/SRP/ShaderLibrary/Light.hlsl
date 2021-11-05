@@ -7,7 +7,7 @@ CBUFFER_START(_CustomLight)
     int _DirectionalLightCount;
     float3 _DirectionalLightColors[MAX_DIRECTIONAL_LIGHTS_COUNT];
     float3 _DirectionalLightDirections[MAX_DIRECTIONAL_LIGHTS_COUNT];
-    float2 _DirectionalLightShadowData[MAX_DIRECTIONAL_LIGHTS_COUNT];
+    float4   _DirectionalLightShadowData[MAX_DIRECTIONAL_LIGHTS_COUNT];
 CBUFFER_END
 
 struct Light
@@ -30,6 +30,7 @@ DirectionalShadowData GetDirectionalShadowData(int index,ShadowData shadowData)
     DirectionalShadowData data;
     data.strength = _DirectionalLightShadowData[index].x * shadowData.strength;
     data.tileIndex = _DirectionalLightShadowData[index].y + shadowData.cascadeIndex;
+    data.normalBias = _DirectionalLightShadowData[index].z;
     return data;
 }   
 
@@ -38,7 +39,8 @@ Light GetDirectionLight(int index,Surface surfaceWS,ShadowData shadowData)
     Light light;
     light.color = _DirectionalLightColors[index];
     light.direction = _DirectionalLightDirections[index];
-    light.attenuation = GetDirectionalShadowAttenuation(GetDirectionalShadowData(index,shadowData),surfaceWS);
+    light.attenuation = GetDirectionalShadowAttenuation(
+        GetDirectionalShadowData(index,shadowData),shadowData,surfaceWS);
     // 用于可视化阴影的 cascade 分界线
     // light.attenuation *= shadowData.cascadeIndex * 0.25f;
     return light;

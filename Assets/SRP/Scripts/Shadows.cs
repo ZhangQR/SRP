@@ -28,13 +28,14 @@ public class Shadows
     private Vector4[] cascadeCullSpheres = new Vector4[maxCascades],
         cascadeData = new Vector4[maxCascades];
 
-    struct ShadowDirectionalLight
+    struct ShadowedDirectionalLight
     {
         public int visibleLightId;
+        public float slopeScaleBias;
     }
 
-    private ShadowDirectionalLight[] shadowDirectionalLights =
-        new ShadowDirectionalLight[maxShadowDirectionalLightCount];
+    private ShadowedDirectionalLight[] shadowDirectionalLights =
+        new ShadowedDirectionalLight[maxShadowDirectionalLightCount];
     
     private CullingResults cullingResults;
     private ScriptableRenderContext context;
@@ -65,7 +66,7 @@ public class Shadows
     /// </summary>
     /// <param name="light"></param>
     /// <param name="visibleLightId"></param>
-    public Vector2 ReserveDirectionalShadows(Light light,int visibleLightId)
+    public Vector3 ReserveDirectionalShadows(Light light,int visibleLightId)
     {
         if (shadowDirectionalLightCount < maxShadowDirectionalLightCount &&
             light.shadowStrength > 0 && light.shadows != LightShadows.None &&
@@ -75,13 +76,17 @@ public class Shadows
             // shadowDirectionalLightCount 是 shadow array 的 id，
             // visibleLightId 是 Directional Light Array 的 Id
             shadowDirectionalLights[shadowDirectionalLightCount] =
-                new ShadowDirectionalLight
+                new ShadowedDirectionalLight
                 {
-                    visibleLightId = visibleLightId
+                    visibleLightId = visibleLightId,
+                    slopeScaleBias = light.shadowBias
                 };
-            return new Vector2(light.shadowStrength, setting.directional.CascadeCount * shadowDirectionalLightCount++);
+            return new Vector3(
+                light.shadowStrength, 
+                setting.directional.CascadeCount * shadowDirectionalLightCount++,
+                light.shadowNormalBias);
         }
-        return Vector2.zero;
+        return Vector3.zero;
     }
 
     /// <summary>
@@ -174,7 +179,7 @@ public class Shadows
             }
             // 不直观，且不好操作，需要根据场景手动适配
             // 有可能从 shadow acne 到 peter-panning
-            buffer.SetGlobalDepthBias(0,3f);
+            buffer.SetGlobalDepthBias(0f, light.slopeScaleBias);
             ExecuteBuffer();
             context.DrawShadows(ref shadowDrawingSettings);
             buffer.SetGlobalDepthBias(0f,0f);
