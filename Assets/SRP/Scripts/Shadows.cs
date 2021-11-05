@@ -171,8 +171,12 @@ public class Shadows
                 cullingsphere.w *= cullingsphere.w;
                 cascadeCullSpheres[i] = cullingsphere;
             }
+            // 不直观，且不好操作，需要根据场景手动适配
+            // 有可能从 shadow acne 到 peter-panning
+            buffer.SetGlobalDepthBias(0,3f);
             ExecuteBuffer();
             context.DrawShadows(ref shadowDrawingSettings);
+            buffer.SetGlobalDepthBias(0f,0f);
         }
     }
 
