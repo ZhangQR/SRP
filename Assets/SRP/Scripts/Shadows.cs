@@ -20,11 +20,13 @@ public class Shadows
         cascadeCountId = Shader.PropertyToID("_CascadeCount"),
         cascadeCullSpheresId = Shader.PropertyToID("_CascadeCullSpheres"),
         // float2 y:1/DistanceFade  x:1/maxDistance z:1/(1-(1-cascadeFade)^2)
-        shadowDistanceFadeId = Shader.PropertyToID("_ShaderDistanceFade");
+        shadowDistanceFadeId = Shader.PropertyToID("_ShaderDistanceFade"),
+        cascadeDataId = Shader.PropertyToID("_CascadeData");
 
     private Matrix4x4[] dirShadowMatrices = new Matrix4x4[maxShadowDirectionalLightCount * maxCascades];
     // 每个灯光都可以使用一套 cullSphere
-    private Vector4[] cascadeCullSpheres = new Vector4[maxCascades];
+    private Vector4[] cascadeCullSpheres = new Vector4[maxCascades],
+        cascadeData = new Vector4[maxCascades];
 
     struct ShadowDirectionalLight
     {
@@ -135,6 +137,7 @@ public class Shadows
         buffer.SetGlobalVector(shadowDistanceFadeId,
             new Vector4(1 / setting.maxDistance,1 / setting.distanceFade,
                 1/(1f-f * f)));
+        buffer.SetGlobalVectorArray(cascadeDataId,cascadeData);
         buffer.EndSample(bufferName);
         ExecuteBuffer();
     }
@@ -166,10 +169,8 @@ public class Shadows
             buffer.SetViewProjectionMatrices(viewMatrix, projMatrix);
             if (index == 0)
             {
-                var cullingsphere = shadowSplitData.cullingSphere;
-                // 因为在 shader 中只要用到平方
-                cullingsphere.w *= cullingsphere.w;
-                cascadeCullSpheres[i] = cullingsphere;
+                var cullingSphere = shadowSplitData.cullingSphere;
+                SetCascadeData(i,cullingSphere);
             }
             // 不直观，且不好操作，需要根据场景手动适配
             // 有可能从 shadow acne 到 peter-panning
@@ -178,6 +179,19 @@ public class Shadows
             context.DrawShadows(ref shadowDrawingSettings);
             buffer.SetGlobalDepthBias(0f,0f);
         }
+    }
+
+    /// <summary>
+    /// 设置 Cascade Data Array 和 Culling Sphere Array
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="cullingSphere"></param>
+    private void SetCascadeData(int index,Vector4 cullingSphere)
+    {
+        // 注意在这一步的时候，catlike 中的教程顺序是反的
+        cullingSphere.w *= cullingSphere.w;
+        cascadeCullSpheres[index] = cullingSphere;
+        cascadeData[index].x = 1f / cullingSphere.w;
     }
 
     /// <summary>
