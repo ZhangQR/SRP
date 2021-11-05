@@ -170,7 +170,7 @@ public class Shadows
             if (index == 0)
             {
                 var cullingSphere = shadowSplitData.cullingSphere;
-                SetCascadeData(i,cullingSphere);
+                SetCascadeData(i,cullingSphere,tileSize);
             }
             // 不直观，且不好操作，需要根据场景手动适配
             // 有可能从 shadow acne 到 peter-panning
@@ -186,12 +186,16 @@ public class Shadows
     /// </summary>
     /// <param name="index"></param>
     /// <param name="cullingSphere"></param>
-    private void SetCascadeData(int index,Vector4 cullingSphere)
+    /// /// <param name="tileSize"></param>
+    private void SetCascadeData(int index,Vector4 cullingSphere,float tileSize)
     {
         // 注意在这一步的时候，catlike 中的教程顺序是反的
         cullingSphere.w *= cullingSphere.w;
         cascadeCullSpheres[index] = cullingSphere;
-        cascadeData[index].x = 1f / cullingSphere.w;
+        float texelSize = 2 * cullingSphere.w / tileSize;
+        cascadeData[index] = new Vector4(
+            1f / cullingSphere.w,
+            texelSize * 1.4142136f);
     }
 
     /// <summary>
